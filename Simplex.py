@@ -91,6 +91,7 @@ def escolhe_coluna(vetor):
 
 def escolhe_linha(coluna, b):
         aux = np.inf
+        index = -1
         for i in range(coluna.shape[0]):
             if coluna[i] > 0:
                 razao = b[i]/coluna[i]
@@ -98,6 +99,18 @@ def escolhe_linha(coluna, b):
                     aux = razao
                     index = i
         return index
+
+def certificado_ilimitada(matriz, base, num_col, index):
+    certificado = np.zeros(matriz.shape[1])
+    certificado[index] = 1
+    count = 0
+    for i in base:
+        if i != 0:
+            certificado[i] = -matriz[count][index]
+        count += 1
+    
+    return certificado[matriz.shape[0]-1:matriz.shape[0]-1 + num_col]
+    
 
 def Simplex(matriz, base):
 
@@ -112,12 +125,17 @@ def Simplex(matriz, base):
         coluna = escolhe_coluna(matriz[0,matriz.shape[0]-1:matriz.shape[1]-1])
         b = matriz[1:,matriz.shape[1]-1]
         linha = escolhe_linha(matriz[1:,coluna+matriz.shape[0]-1], b)
+        if linha == -1:
+            print('ilimitada')
+            print(vetor_sol(matriz, base, c_original.shape[0]))
+            print(certificado_ilimitada(matriz, base, c_original.shape[0], coluna+matriz.shape[0]-1))
+            exit()
         base[linha+1] = coluna+matriz.shape[0]-1
         matriz = Pivoteamento(matriz, linha+1, coluna+matriz.shape[0]-1)
         matriz[np.isclose(matriz, 0)] = 0
     return matriz, base
 
-def vetor_sol_otimo(matriz, base, num_linhas):
+def vetor_sol(matriz, base, num_linhas):
     solucao = np.zeros(num_linhas)
     for j in base[1:]:
         if j < matriz.shape[1]-matriz.shape[0]:
@@ -178,7 +196,7 @@ def classificacao(A, base, c_original):
             resultado_simplex, base = Simplex(A, base)
             print('otimo')
             print(resultado_simplex[0, -1])
-            print(vetor_sol_otimo(resultado_simplex, base, c_original.shape[1]))
+            print(vetor_sol(resultado_simplex, base, c_original.shape[1]))
             print(resultado_simplex[0, 0:resultado_simplex.shape[0]-1])
             
 c_A_fpi = FPI(A_original, b, c_original)
